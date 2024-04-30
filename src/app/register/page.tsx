@@ -1,19 +1,23 @@
 "use client"
 import { LOGIN_ROUTE } from '@/constants/routes';
+import { auth } from '@/firebase/firebase';
 import type { FormProps } from 'antd';
 import { Button, Checkbox, Form, Input } from 'antd';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const Register = () => {
+    const router = useRouter();
     type FieldType = {
-        username?: string;
+        displayName?: string;
         email?: string;
         password?: string;
     };
 
     const [formValues, setFormValues] = useState<FieldType>({
-        username: '',
+        displayName: '',
         email: '',
         password: ''
     });
@@ -26,7 +30,16 @@ const Register = () => {
     };
 
     const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-        console.log('Success:', values);
+        createUserWithEmailAndPassword(auth, values.email, values.password)
+            .then(res => {
+                console.log("user", res.user);
+                alert("You are registered successfully");
+                router.push('/');
+            })
+            .catch(err => {
+                console.log("Error", err.message);
+            })
+
     };
 
     const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
@@ -34,7 +47,7 @@ const Register = () => {
     };
 
     return (
-        <div className="w-3/5 mx-auto mt-20 mb-10 border-[#04734C] border-b-8 rounded-b-lg rounded-t-lg">
+        <div className="md:w-3/5 mx-auto mt-20 mb-10 border-[#04734C] border-b-8 rounded-b-lg rounded-t-lg">
             <div className="bg-[#04734C] p-7 rounded-t-lg mb-8">
                 <h1 className="text-5xl font-semibold text-center text-white">Register Here</h1>
             </div>
@@ -51,15 +64,18 @@ const Register = () => {
                 >
                     <Form.Item<FieldType>
                         label="Username"
-                        name="username"
+                        name="displayName"
                         rules={[{ message: 'Please input your username!' }]}
                     >
-                        <Input className='w-full' onChange={(e) => handleInputChange('username', e.target.value)} />
+                        <Input className='w-full' onChange={(e) => handleInputChange('displayName', e.target.value)} />
                     </Form.Item>
-                    <Form.Item<FieldType>
+                    <Form.Item
                         label="Email"
                         name="email"
-                        rules={[{ message: 'Please input your email!' }]}
+                        rules={[
+                            { message: 'Please input your email!' },
+                            { type: 'email', message: 'Please enter a valid email address!' },
+                        ]}
                     >
                         <Input onChange={(e) => handleInputChange('email', e.target.value)} />
                     </Form.Item>
